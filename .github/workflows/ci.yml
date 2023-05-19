@@ -39,3 +39,6 @@ jobs:
         if: |
           startsWith(github.ref, 'refs/tags/') &&
           matrix.python-version == '3.8'
+        env:
+          PYPI_UNAME: __token__
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
