@@ -1,0 +1,59 @@
+minimum_pre_commit_version: 2.3.0
+
+
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        language: system
+        entry: ruff
+        exclude: &default-py-exclude |
+          (?x)^(
+            LICENSE|
+            README.md|
+            Makefile|
+            .bumpversion.cfg|
+            CHANGELOG.md|
+            .coveragerc|
+            .gitchangelog.rc|
+            pytest.ini|
+            .github/.+|
+            .paylocity/.+|
+            .env\..+|
+            Dockerfile|
+            .gitignore|
+            .pre-commit-config.yaml|
+            .editorconfig|
+            MANIFEST.in|
+            pcty_features_donkey/VERSION|
+            pdm.lock|
+            datadog.json|
+            pyproject.toml
+          )
+      - id: black
+        name: black
+        language: system
+        entry: black
+        types: [python]
+        exclude: *default-py-exclude
+      - id: isort
+        name: isort
+        language: system
+        entry: isort
+        types: [python]
+        exclude: *default-py-exclude
+      - id: mypy
+        name: mypy
+        language: system
+        entry: mypy
+        types: [python]
+        exclude: *default-py-exclude
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml

@@ -1,0 +1,172 @@
+[tool.black]
+line-length = 79
+target-version = ["py38"]
+
+[tool.ruff]
+target-version = "py38"
+ignore = [
+    "E501", # line-legth check
+    "D203", # black managed: one-blank-line-before-class
+    "D211", # black managed: no-blank-line-before-class
+    "D212", # black managed: multi-line-summary-first-line
+    "D213", # black managed: multi-line-summary-second-line
+    "INP001", # pdm managed: is part of an implicit namespace package. Add an `__init__.py`
+    "I001", # isort managed: Import block is un-sorted or un-formatted
+    "D100", # imho: shouldn't be enforced: Missing docstring in public module
+    "D103", # imho: docstrings in pub functions and classes shouldn't be enforced: Missing docstring in public function
+    "D104", # imho: docstrings in pub packages and classes shouldn't be enforced: Missing docstring in public function
+    "D101", # Missing docstring in public class
+    "COM812", # black managed: Trailing comma missing
+    "TRY003", # Avoid specifying long messages outside the exception class
+    "EM102", # Exception must not use an f-string literal, assign to variable first
+    "G004", # not a crime especially in loguru: Logging statement uses f-string
+    "S101", # Use of `assert` detected
+    "G010", # pcty_log use warn as access to Logging.warning: Logging statement uses `warn` instead of `warning`
+    "ERA001", # do not remove anything detected to be commented out code, this was removing intended comments
+    "F401", # do not remove unused imports in dags; there are expected to be imports that appear unused but will be used
+    "N812", # Lowercase `types` imported as non-lowercase `T`
+    "PLR0913", # Too many arguments to function call
+    "ANN101", # Missing type annotation for `self` in method
+    "ANN102", # Missing type annotation for `cls` in classmethod
+    "PGH003", # Use specific rule codes when ignoring type issues (too much)
+    "D102", #  If code is fully typed there are a lot of cases when we don't need docstrings. Missing docstring in public method
+    "D105", # Why we would need: Missing docstring in magic method
+]
+select = [
+    "ALL",
+]
+exclude = [
+]
+
+
+[tool.ruff.per-file-ignores]
+"tests/*.py" = [
+    "ANN001", # for fixtures that's expected: Missing type annotation for function argument
+    "ANN201", # test fnuctions no need to annotate: Missing return type annotation for public function
+    "PT019", # This is a mistake in ruff in case of pytest:parametrize:Fixture `_ext` without value is injected as parameter, use `@pytest.mark.usefixtures` instead
+    "PD901", # `df` is a bad variable name. Be kinder to your future self.
+    "ARG001", # Unused function argument
+    "PT015", # Assertion always fails, replace with `pytest.fail()`
+    "PT023", # Use `@pytest.mark.integration()` over `@pytest.mark.integration`
+]
+"tests/conftest.py" = [
+    "ALL"
+]
+
+[tool.coverage.run]
+branch = false
+source = [
+    "./pytest_when"
+]
+omit = [
+]
+
+[tool.coverage.paths]
+source = ["./pytest_when"]
+
+[tool.coverage.report]
+fail_under = 100
+skip_covered = true
+show_missing = true
+
+[tool.coverage.html]
+directory = "coverage_html"
+
+
+[tool.pytest.ini_options]
+minversion = "7.2.0"
+addopts = """
+    -vv
+    -s
+"""
+testpaths = "tests/"
+
+
+[tool.isort]
+atomic = true
+line_length = 79
+lines_after_imports = 2
+lines_between_types = 1
+use_parentheses = true
+balanced_wrapping = true
+include_trailing_comma = true
+multi_line_output = 3
+known_third_party = [
+    "pytest",
+]
+known_first_party = [
+]
+
+[tool.mypy]
+allow_redefinition = false
+check_untyped_defs = true
+ignore_errors = false
+ignore_missing_imports = true
+implicit_reexport = false
+local_partial_types = true
+no_implicit_optional = true
+strict_equality = true
+strict_optional = true
+warn_no_return = true
+warn_redundant_casts = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+namespace_packages = true
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = [
+    "conftest",
+    "tests.*",
+    "*.tests",
+]
+
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+]
+
+ignore_missing_imports = true
+
+
+[project]
+name = "pytest_when"
+dynamic = ["version"]
+description = ""
+authors = [
+    { name = "zhukovgreen", email = "iam+pytest-when@zhukovgreen.pro" },
+]
+dependencies = [
+    "environs>=9.5.0",
+    "pip>=23.1.2",
+]
+requires-python = ">=3.8"
+readme = "README.md"
+
+[project.urls]
+repository = "https://github.com/zhukovgreen/pytest-when"
+
+[tool.pdm]
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pre-commit>=2.21.0",
+    "black>=23.3.0",
+    "isort>=5.11.5",
+    "mypy>=1.2.0",
+    "ruff>=0.0.263",
+]
+test = [
+    "pytest>=7.3.1",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+]
+
+[tool.pdm.version]
+source = "scm"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
