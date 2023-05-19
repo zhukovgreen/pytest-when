@@ -16,6 +16,7 @@ After installing the package a new fixture `when` will be available.
 See the following example how to use it:
 
 ```python
+# class which we're going to mock in the test
 class Klass1:
     def some_method(
         self,
@@ -31,9 +32,9 @@ class Klass1:
 def test_should_properly_patch_calls(when):
     when(Klass1, "some_method").called_with(
         "a",
-        Markers.any,
+        when.markers.any,
         kwarg1="b",
-        kwarg2=Markers.any,
+        kwarg2=when.markers.any,
     ).then_return("Mocked")
 
     assert (

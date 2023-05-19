@@ -280,6 +280,24 @@ class When(
         *args,
         **kwargs,
     ) -> "When":
+        """Specify args and kwargs for which mock should be activated.
+
+        Example:
+        >>> when(Klass1, "some_class_method").called_with(
+        >>>     "a",
+        >>>     when.markers.any,
+        >>>     kwarg1="b",
+        >>>     kwarg2=when.markers.any,
+        >>> ).then_return("Mocked")
+
+        In this case the "Mocked" will be returned only if `some method`
+        will be called with:
+        "a" - as first argument,
+        any second argument,
+        kwarg1 = "b" (only),
+        any kwarg2 kwarg
+
+        """
         is_instance_method = (
             tuple(
                 inspect.signature(
@@ -297,6 +315,7 @@ class When(
         return self
 
     def then_return(self, value: _TargetMethodReturn) -> MagicMock:
+        """Return value in case the called_with specification will match the call."""
         return self.mocked_calls.add_call(
             self.cls,
             self.method,
