@@ -1,6 +1,20 @@
 # pytest-when
 
-Pytest plugin for making mocking in python more readable.
+Plugin provides a `when` fixture, which enables the following way of mocking
+the python objects:
+
+```python
+(
+    when(some_object, "attribute")
+    .called_with(1, 2, when.markers.any)
+    .then_return("mocked")
+)
+```
+
+It is readable and gives you a way to enable the mock only for a specific
+argument's values. In this the attribute will be mocked, for specific
+first two arguments and any third argument.
+
 Inspired by <https://github.com/mockito/mockito-scala>
 
 ## Installation
