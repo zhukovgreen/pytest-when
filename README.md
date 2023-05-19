@@ -55,6 +55,34 @@ def test_should_properly_patch_calls(when):
         )
         == "Not mocked"
     )
+
+# if you need to patch a function
+def test_patch_a_function(when):
+    when(example_module, "some_normal_function").called_with(
+        "a",
+        when.markers.any,
+        kwarg1="b",
+        kwarg2=when.markers.any,
+    ).then_return("Mocked")
+
+    assert (
+            example_module.some_normal_function(
+                "a",
+                1,
+                kwarg1="b",
+                kwarg2="c",
+            )
+            == "Mocked"
+    )
+    assert (
+            example_module.some_normal_function(
+                "not mocked param",
+                1,
+                kwarg1="b",
+                kwarg2="c",
+            )
+            == "Not mocked"
+    )
 ```
 
 It is possible to use 'when' with class methods and standalone functions
