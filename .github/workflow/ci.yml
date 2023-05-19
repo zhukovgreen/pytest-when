@@ -1,0 +1,41 @@
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - '*'
+
+name: Test Action
+
+jobs:
+  testing:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [ "3.8", "3.9", "3.10", "3.11" ]
+        os: [ "ubuntu-latest" ]
+    name: Test the action
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: true
+
+      - name: Install dependencies
+        run: pdm install -v && pdm info
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test
+
+      - name: Publish on git tags
+        run: make publish
+        if: |
+          startsWith(github.ref, 'refs/tags/') &&
+          matrix.python-version == '3.8'
