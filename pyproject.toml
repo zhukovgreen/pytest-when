@@ -140,7 +140,7 @@ ignore_missing_imports = true
 [project]
 name = "pytest_when"
 dynamic = ["version"]
-description = "Utility makes mocing more readable"
+description = "Utility which makes mocking more readable and controllable"
 authors = [
     { name = "zhukovgreen", email = "iam+pytest-when@zhukovgreen.pro" },
 ]
