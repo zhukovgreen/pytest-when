@@ -176,6 +176,32 @@ def test_should_be_able_to_patch_multiple_calls(when):
     )
 
 
+def test_should_properly_repatch(when):
+    when(Klass1, "some_method").called_with(
+        "a",
+        when.markers.any,
+        kwarg1="b",
+        kwarg2=when.markers.any,
+    ).then_return("Mocked first time")
+
+    when(Klass1, "some_method").called_with(
+        "a",
+        when.markers.any,
+        kwarg1="b",
+        kwarg2=when.markers.any,
+    ).then_return("Mocked second time")
+
+    assert (
+        Klass1().some_method(
+            "a",
+            1,
+            kwarg1="b",
+            kwarg2="c",
+        )
+        == "Mocked second time"
+    )
+
+
 def test_should_be_able_to_patch_multiple_objects(when):
     when(Klass1, "some_method").called_with(
         "a",
