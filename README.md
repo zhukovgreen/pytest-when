@@ -67,3 +67,19 @@ You can also patch multiple targets (cls, method)
 See more examples at:
 [test_integration](tests/test_integration.py)
 
+
+## Setup for local developement
+
+Requirements:
+1. pdm <https://pdm.fming.dev/latest/#installation>
+2. python3.8 (minimum supported by a tool)
+
+```bash
+pdm install
+```
+
+To run tests and linters use:
+```bash
+make test
+make lint
+```
