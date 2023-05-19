@@ -63,3 +63,7 @@ You can patch multiple times the same object with different "called_with"
 parameters in a single test.
 
 You can also patch multiple targets (cls, method)
+
+See more examples at:
+[test_integration](tests/test_integration.py)
+
