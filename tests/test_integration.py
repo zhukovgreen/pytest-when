@@ -76,12 +76,6 @@ def test_should_properly_patch_calls(when):
     )
 
 
-@pytest.mark.skip(
-    reason=(
-        "bug in unittest, "
-        "see https://github.com/python/cpython/issues/67267"
-    )
-)
 def test_should_work_with_classmethods(when):
     when(Klass1, "some_class_method").called_with(
         "a",

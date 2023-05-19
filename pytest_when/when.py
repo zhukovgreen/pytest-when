@@ -257,12 +257,6 @@ class When(
         cls: _TargetClsType,
         method: str,
     ) -> "When":
-        if inspect.ismethod(getattr(cls, method)):
-            raise NotImplementedError(
-                "See https://github.com/python/cpython/issues/67267 "
-                "for more information"
-            )
-
         def match_current_obj(patch_and_function) -> bool:
             patch, _ = patch_and_function
             return patch.target is cls and patch.attribute == method
