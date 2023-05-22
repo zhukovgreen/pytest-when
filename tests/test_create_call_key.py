@@ -61,7 +61,7 @@ def test_should_work_for_class_methods_as_well():
 
 def test_should_raise_exception_on_incompatible_calls():
     with pytest.raises(
-        Exception,
+        ValueError,
         match="Incompatible call",
     ):
         create_call_key(
@@ -110,7 +110,10 @@ def test_should_properly_work_with_default_values_in_the_signature():
     )
 
     # check if parameter was not specified
-    with pytest.raises(ValueError, match="Not specified parameter a_arg"):
+    with pytest.raises(
+        ValueError,
+        match="Not specified parameter a_arg",
+    ):
         create_call_key(
             inspect.signature(call_with_defaults),
             b_arg="b_arg not default",
