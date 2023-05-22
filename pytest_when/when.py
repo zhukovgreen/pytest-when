@@ -170,8 +170,10 @@ class MockedCalls(
             # side_effect_factory in order the result side_effect stores
             # the original target.
             side_effect=side_effect_factory(
-                getattr(cls, method),
-                self.mocked_calls_registry[(cls.__name__, method)],
+                origin_callable=getattr(cls, method),
+                mocked_calls=self.mocked_calls_registry[
+                    (cls.__name__, method)
+                ],
             ),
         )
 
@@ -257,13 +259,13 @@ class When(
         cls: _TargetClsType,
         method: str,
     ) -> "When":
-        def match_current_obj(patch_and_function) -> bool:
+        def matched_current_obj(patch_and_function) -> bool:
             patch, _ = patch_and_function
             return patch.target is cls and patch.attribute == method
 
         # if current object was already patched, we have to re-patch it again
         for mocked_obj, func in filter(
-            match_current_obj,
+            matched_current_obj,
             self.mocker._patches_and_mocks,  # noqa: ignore SLF001
         ):
             mocked_obj.stop()
