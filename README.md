@@ -17,6 +17,10 @@ first two arguments and any third argument.
 
 Inspired by <https://github.com/mockito/mockito-scala>
 
+`.called_with` method arguments are compared with the
+real callable signature and gives additional protection against
+changing the real callable interface.
+
 ## Installation
 
 ```bash
