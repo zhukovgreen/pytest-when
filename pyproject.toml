@@ -145,8 +145,9 @@ authors = [
     { name = "zhukovgreen", email = "iam+pytest-when@zhukovgreen.pro" },
 ]
 dependencies = [
-    "environs>=9.5.0",
-    "pip>=23.1.2",
+    "pytest>=7.3.1",
+    "pytest-mock>=3.10.0",
+    "typing-extensions>=4.5.0",
 ]
 requires-python = ">=3.8"
 readme = "README.md"
@@ -168,9 +169,7 @@ dev = [
     "ruff>=0.0.263",
 ]
 test = [
-    "pytest>=7.3.1",
     "pytest-cov>=4.0.0",
-    "pytest-mock>=3.10.0",
 ]
 
 [tool.pdm.version]
