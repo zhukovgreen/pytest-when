@@ -1,6 +1,7 @@
 import enum
 import inspect
 
+from collections.abc import Iterable, Mapping
 from typing import Any, Callable, Dict, Generic, Protocol, Tuple, TypeVar
 from unittest.mock import MagicMock
 
@@ -35,6 +36,21 @@ class Markers(enum.Enum):
     any: str = "any"  # noqa: ignore A003
 
 
+def tupleize(
+    container: Tuple[Tuple[str, Any], ...]
+) -> Tuple[Tuple[str, Any], ...]:
+    def unwrap(value):
+        if isinstance(value, str):
+            return value
+        if isinstance(value, Mapping):
+            return tuple((k, unwrap(v)) for k, v in value.items())
+        if isinstance(value, Iterable):
+            return tuple(unwrap(v) for v in value)
+        return value
+
+    return tuple((arg, unwrap(value)) for arg, value in container)
+
+
 def create_call_key(
     original_callable_sig: inspect.Signature,
     *args: _TargetMethodArgs,
@@ -48,26 +64,9 @@ def create_call_key(
 
     Supports normal functions as well as class methods.
     """
-    original_params = original_callable_sig.parameters
-    args_key: _CallKey = tuple(
-        zip(tuple(original_params)[: len(args)], args),
-    )
+    call = original_callable_sig.bind(*args, **kwargs)
 
-    def get_from_kwargs_or_default(k: str) -> Any:
-        maybe_result = kwargs.get(k, original_params[k].default)
-        if maybe_result is inspect.Parameter.empty:  # type: ignore
-            raise ValueError(
-                f"Not specified parameter {k}. "
-                f"Incompatible call specification args={args}, kwargs={kwargs}"
-                f" to the function with signature {original_callable_sig}"
-            )
-        return maybe_result
-
-    kwargs_key: _CallKey = tuple(
-        (k, get_from_kwargs_or_default(k))
-        for k in tuple(original_params)[len(args) :]
-    )
-    return args_key + kwargs_key
+    return tupleize(tuple(call.arguments.items()))
 
 
 def get_mocked_call_result(
