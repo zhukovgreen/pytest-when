@@ -286,3 +286,13 @@ def test_should_work_with_default_params_in_functions(when):
         == "Not mocked"
     )
     patched_klass.assert_called()
+
+
+def test_should_pass_method_with_args_and_kwargs(when):
+    when(example_module, "arg_kwarg_function").called_with(
+        "hello"
+    ).then_return("Mocked")
+
+    assert example_module.arg_kwarg_function("hello") == "Mocked"
+
+    assert example_module.arg_kwarg_function("hi") == "Not mocked"

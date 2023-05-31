@@ -66,6 +66,7 @@ def create_call_key(
     kwargs_key: _CallKey = tuple(
         (k, get_from_kwargs_or_default(k))
         for k in tuple(original_params)[len(args) :]
+        if k != "kwargs"
     )
     return args_key + kwargs_key
 

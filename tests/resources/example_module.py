@@ -6,3 +6,7 @@ def some_normal_function(
     kwarg2: str,
 ) -> str:
     return "Not mocked"
+
+
+def arg_kwarg_function(*args, **kwargs):
+    return "Not mocked"
