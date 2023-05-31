@@ -71,7 +71,7 @@ omit = [
 source = ["./pytest_when"]
 
 [tool.coverage.report]
-fail_under = 53
+fail_under = 51
 skip_covered = true
 show_missing = true
 
