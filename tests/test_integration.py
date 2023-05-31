@@ -1,5 +1,3 @@
-import pytest
-
 from tests.resources import example_module
 
 
@@ -286,3 +284,19 @@ def test_should_work_with_default_params_in_functions(when):
         == "Not mocked"
     )
     patched_klass.assert_called()
+
+
+def test_should_work_with_variadic_args_kwargs(when):
+    patched_foo = (
+        when(example_module, "some_foo_with_variadic_args_kwargs")
+        .called_with(1, a=2)
+        .then_return("Mocked")
+    )
+    assert (
+        example_module.some_foo_with_variadic_args_kwargs(1, a=2) == "Mocked"
+    )
+    assert (
+        example_module.some_foo_with_variadic_args_kwargs(1, a=3)
+        == "Not mocked"
+    )
+    patched_foo.assert_called()
