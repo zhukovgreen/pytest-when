@@ -36,19 +36,20 @@ class Markers(enum.Enum):
     any: str = "any"  # noqa: ignore A003
 
 
-def tupleize(
+def make_hashable(
     container: Tuple[Tuple[str, Any], ...]
 ) -> Tuple[Tuple[str, Any], ...]:
-    def unwrap(value):
-        if isinstance(value, str):
-            return value
+    def unwrap_mapping(value):
         if isinstance(value, Mapping):
-            return tuple((k, unwrap(v)) for k, v in value.items())
-        if isinstance(value, Iterable):
-            return tuple(unwrap(v) for v in value)
+            return tuple((k, unwrap_mapping(v)) for k, v in value.items())
+        if isinstance(value, (list, set)):
+            return tuple(unwrap_mapping(v) for v in value)
+        assert hash(
+            value
+        ), f"Not hashable function arg {value!r} is not supported currently."
         return value
 
-    return tuple((arg, unwrap(value)) for arg, value in container)
+    return tuple((arg, unwrap_mapping(value)) for arg, value in container)
 
 
 def create_call_key(
@@ -66,7 +67,7 @@ def create_call_key(
     """
     call = original_callable_sig.bind(*args, **kwargs)
 
-    return tupleize(tuple(call.arguments.items()))
+    return make_hashable(tuple(call.arguments.items()))
 
 
 def get_mocked_call_result(

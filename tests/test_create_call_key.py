@@ -35,6 +35,15 @@ def test_result_should_be_hashable():
             d_kw=4,
         )
     ] = 1
+    {}[
+        create_call_key(
+            inspect.signature(foo),
+            {"some_inner": "container"},
+            ("some", "list"),
+            c_kw=3,
+            d_kw=4,
+        )
+    ] = 2
 
 
 def test_should_work_for_class_methods_as_well():
