@@ -39,7 +39,7 @@ def test_result_should_be_hashable():
         create_call_key(
             inspect.signature(foo),
             {"some_inner": "container"},
-            ("some", "list"),
+            ["some", "list"],
             c_kw=3,
             d_kw=4,
         )
