@@ -1,0 +1,1 @@
+{"author":{"id":"4e33a447fefac54269509704b531fcb129b4c7d3de0f91566ceb0821f329d762"},"ops":[{"type":1,"timestamp":1685974405,"nonce":"z86YnqKB5elLhWzPWizWirh1x+k=","title":"When creating a MR the workflow steps are triggered two times","message":"Currently each job is triggered with the push and merge request trigger\n\nShould be only once","files":null}]}
