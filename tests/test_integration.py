@@ -300,3 +300,13 @@ def test_should_work_with_variadic_args_kwargs(when):
         == "Not mocked"
     )
     patched_foo.assert_called()
+
+
+def test_should_work_with_foo_without_args(when):
+    patched_foo = (
+        when(example_module, "some_foo_without_args")
+        .called_with()
+        .then_return("Mocked")
+    )
+    assert example_module.some_foo_without_args() == "Mocked"
+    patched_foo.assert_called()

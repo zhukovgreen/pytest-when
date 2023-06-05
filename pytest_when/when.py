@@ -300,17 +300,15 @@ class When(
         any kwarg2 kwarg
 
         """
-        is_instance_method = (
-            tuple(
-                inspect.signature(
-                    getattr(
-                        self.cls,
-                        self.method,
-                    )
-                ).parameters
-            )[0]
-            == "self"
+        params = tuple(
+            inspect.signature(
+                getattr(
+                    self.cls,
+                    self.method,
+                )
+            ).parameters
         )
+        is_instance_method = False if not params else params[0] == "self"
         # prepend Markers.any in case of a method (for self arg)
         self.args = (Markers.any, *args) if is_instance_method else args
         self.kwargs = kwargs

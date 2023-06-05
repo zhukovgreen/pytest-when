@@ -13,3 +13,7 @@ def some_foo_with_variadic_args_kwargs(
     **kwargs,
 ) -> str:
     return "Not mocked"
+
+
+def some_foo_without_args() -> str:
+    return "Not mocked"
