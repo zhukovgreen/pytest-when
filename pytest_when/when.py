@@ -1,7 +1,7 @@
 import enum
 import inspect
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from typing import Any, Callable, Dict, Generic, Protocol, Tuple, TypeVar
 from unittest.mock import MagicMock
 
@@ -12,7 +12,7 @@ from typing_extensions import ParamSpec
 
 
 class HasNameDunder(Protocol):
-    __name__: str  # noqa: inore A003
+    __name__: str  # noqa: A003
 
 
 _TargetClsType = TypeVar("_TargetClsType", bound=HasNameDunder)
@@ -33,7 +33,7 @@ class Markers(enum.Enum):
     Markers.any - means the argument could be anything
     """
 
-    any: str = "any"  # noqa: ignore A003
+    any: str = "any"  # noqa: A003
 
 
 def make_hashable(
@@ -137,7 +137,7 @@ class MockedCalls(
     mocked_calls_registry: Dict[
         _TargetMethodKey,
         Dict[_CallKey, _TargetMethodReturn],
-    ] = {}
+    ] = {}  # noqa: RUF012
 
     def __init__(self, mocker: MockerFixture) -> None:
         self.mocker = mocker
@@ -266,10 +266,10 @@ class When(
         # if current object was already patched, we have to re-patch it again
         for mocked_obj, func in filter(
             matched_current_obj,
-            self.mocker._patches_and_mocks,  # noqa: ignore SLF001
+            self.mocker._patches_and_mocks,  # noqa: SLF001
         ):
             mocked_obj.stop()
-            self.mocker._patches_and_mocks.remove(  # noqa: ignore SLF001
+            self.mocker._patches_and_mocks.remove(  # noqa: SLF001
                 (mocked_obj, func)
             )
 

@@ -27,6 +27,7 @@ ignore = [
     "G010", # pcty_log use warn as access to Logging.warning: Logging statement uses `warn` instead of `warning`
     "ERA001", # do not remove anything detected to be commented out code, this was removing intended comments
     "F401", # do not remove unused imports in dags; there are expected to be imports that appear unused but will be used
+    "FA100", # Missing `from __future__ import annotations`, but uses `typing.Tuple`
     "N812", # Lowercase `types` imported as non-lowercase `T`
     "PLR0913", # Too many arguments to function call
     "ANN", # ignore all annotation related errors as we use mypy
