@@ -170,3 +170,4 @@ install-deps
 metastore_db/
 mlruns/
 spark-warehouse/
+.pdm-build
