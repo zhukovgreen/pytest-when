@@ -1,8 +1,20 @@
 import enum
+import functools
 import inspect
 
 from collections.abc import Mapping
-from typing import Any, Callable, Dict, Generic, Protocol, Tuple, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Hashable,
+    Protocol,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 from unittest.mock import MagicMock
 
 import pytest
@@ -36,20 +48,28 @@ class Markers(enum.Enum):
     any: str = "any"  # noqa: A003
 
 
-def make_hashable(
+def make_container_hashable(
     container: Tuple[Tuple[str, Any], ...]
 ) -> Tuple[Tuple[str, Any], ...]:
-    def unwrap_mapping(value):
-        if isinstance(value, Mapping):
-            return tuple((k, unwrap_mapping(v)) for k, v in value.items())
-        if isinstance(value, (list, set)):
-            return tuple(unwrap_mapping(v) for v in value)
-        assert hash(
-            value
-        ), f"Not hashable function arg {value!r} is not supported currently."
-        return value
+    """Make call signature hashable recursively."""
+    return tuple((arg, make_hashable(value)) for arg, value in container)
 
-    return tuple((arg, unwrap_mapping(value)) for arg, value in container)
+
+@functools.singledispatch
+def make_hashable(val) -> Hashable:
+    """Single dispatch function to ensure the generic val is hashable."""
+    return val
+
+
+@make_hashable.register
+def _(val: Mapping) -> Tuple[Tuple[str, Any], ...]:
+    return tuple((k, make_hashable(v)) for k, v in val.items())
+
+
+@make_hashable.register(list)
+@make_hashable.register(set)
+def _(val: Union[Tuple[Any], Set[Any]]) -> Tuple[Any, ...]:
+    return tuple(map(make_hashable, val))
 
 
 def create_call_key(
@@ -67,7 +87,7 @@ def create_call_key(
     """
     call = original_callable_sig.bind(*args, **kwargs)
 
-    return make_hashable(tuple(call.arguments.items()))
+    return make_container_hashable(tuple(call.arguments.items()))
 
 
 def get_mocked_call_result(
