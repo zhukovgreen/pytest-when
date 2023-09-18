@@ -72,7 +72,7 @@ omit = [
 source = ["./pytest_when"]
 
 [tool.coverage.report]
-fail_under = 51
+fail_under = 100
 skip_covered = true
 show_missing = true
 
@@ -138,6 +138,24 @@ module = [
 ignore_missing_imports = true
 
 
+
+[tool.pdm]
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "pre-commit>=2.21.0",
+    "black>=23.3.0",
+    "isort>=5.11.5",
+    "mypy>=1.2.0",
+    "ruff>=0.0.263",
+]
+test = [
+    "coverage>=7.3.1",
+]
+
+[tool.pdm.version]
+source = "scm"
+
 [project]
 name = "pytest_when"
 dynamic = ["version"]
@@ -158,23 +176,6 @@ pytest-when = "pytest_when.plugin"
 
 [project.urls]
 repository = "https://github.com/zhukovgreen/pytest-when"
-
-[tool.pdm]
-
-[tool.pdm.dev-dependencies]
-dev = [
-    "pre-commit>=2.21.0",
-    "black>=23.3.0",
-    "isort>=5.11.5",
-    "mypy>=1.2.0",
-    "ruff>=0.0.263",
-]
-test = [
-    "pytest-cov>=4.0.0",
-]
-
-[tool.pdm.version]
-source = "scm"
 
 [build-system]
 requires = ["pdm-backend"]
