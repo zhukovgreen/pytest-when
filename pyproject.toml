@@ -157,7 +157,7 @@ test = [
 source = "scm"
 
 [project]
-name = "pytest_when"
+name = "pytest-when"
 dynamic = ["version"]
 description = "Utility which makes mocking more readable and controllable"
 authors = [
