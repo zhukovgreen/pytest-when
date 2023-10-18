@@ -1,24 +1,18 @@
 on:
   push:
-    branches:
-      - 'main'
     tags:
       - '*'
-  pull_request:
-      branches:
-        - '*'
-        - '**/*'
 
-name: Test Action
+name: Release
 
 jobs:
   testing:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
+        python-version: [ "3.8" ]
         os: [ "ubuntu-latest" ]
-    name: CI
+    name: Release
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -32,18 +26,8 @@ jobs:
       - name: Install dependencies
         run: pdm install -v && pdm info
 
-      - name: Lint
-        run: make lint
-
-      - name: Test
-        run: make test
-
       - name: Publish on git tags
         run: make publish
-        if: |
-          startsWith(github.ref, 'refs/tags/') &&
-          github.ref == 'refs/heads/main' &&
-          matrix.python-version == '3.8'
         env:
           PYPI_UNAME: __token__
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
