@@ -9,6 +9,7 @@ from typing import (
     Dict,
     Generic,
     Hashable,
+    List,
     Protocol,
     Set,
     Tuple,
@@ -68,7 +69,7 @@ def _(val: Mapping) -> Tuple[Tuple[str, Any], ...]:
 
 @make_hashable.register(list)
 @make_hashable.register(set)
-def _(val: Union[Tuple[Any], Set[Any]]) -> Tuple[Any, ...]:
+def _(val: Union[List[Any], Set[Any]]) -> Tuple[Any, ...]:
     return tuple(map(make_hashable, val))
 
 
