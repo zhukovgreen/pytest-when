@@ -25,7 +25,7 @@ from typing_extensions import ParamSpec
 
 
 class HasNameDunder(Protocol):
-    __name__: str  # noqa: A003
+    __name__: str
 
 
 _TargetClsType = TypeVar("_TargetClsType", bound=HasNameDunder)
@@ -46,7 +46,7 @@ class Markers(enum.Enum):
     Markers.any - means the argument could be anything
     """
 
-    any: str = "any"  # noqa: A003
+    any: str = "any"
 
 
 def make_container_hashable(
