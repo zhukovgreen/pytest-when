@@ -171,3 +171,4 @@ metastore_db/
 mlruns/
 spark-warehouse/
 .pdm-build
+/.venv/
