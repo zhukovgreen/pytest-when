@@ -1,5 +1,7 @@
 # pytest-when
 
+<img src="./logo.png" width="250"/>
+
 Plugin provides a `when` fixture, which enables the following way of mocking
 the python objects:
 
