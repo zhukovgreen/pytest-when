@@ -21,12 +21,57 @@ Inspired by <https://github.com/mockito/mockito-scala>
 real callable signature and gives additional protection against
 changing the real callable interface.
 
+With `when` fixture, the following expression:
+
+```python
+when(example_module, "some_normal_function").called_with(
+    "a",
+    1,
+    kwarg1="b",
+    kwarg2=2,
+).then_return("Mocked")
+
+```
+
+is roughly equal to:
+
+```python
+
+mock_only_for_calls = (
+    call("a", 1, kwarg1="b", kwarg2=2),
+    "Mocked",
+)
+
+def matches(
+        call: Call,
+        mocked_calls_registry: tuple[tuple[call, ReturnType], ...],
+) -> bool:
+    ...
+
+def create_call(*args, **kwargs) -> Call:
+    ...
+
+def side_effect_callback(*args, **kwargs):
+    if matches(create_call(*args, **kwargs), mock_only_for_calls):
+        return mock_only_for_calls[1]
+    return unittest.mock.DEFAULT
+
+
+mocker.patch.object(
+    example_module,
+    "some_normal_function",
+    autospec=True,
+    side_effect=side_effect_callback,
+)
+```
+
+where logic of `matches` and `create_call` is not trivial
+
 ## Installation
 
 ```bash
 pip install pytest-when
 ```
-
 
 ## Usage
 
@@ -37,12 +82,12 @@ See the following example how to use it:
 # class which we're going to mock in the test
 class Klass1:
     def some_method(
-        self,
-        arg1: str,
-        arg2: int,
-        *,
-        kwarg1: str,
-        kwarg2: str,
+            self,
+            arg1: str,
+            arg2: int,
+            *,
+            kwarg1: str,
+            kwarg2: str,
     ) -> str:
         return "Not mocked"
 
@@ -56,23 +101,24 @@ def test_should_properly_patch_calls(when):
     ).then_return("Mocked")
 
     assert (
-        Klass1().some_method(
-            "a",
-            1,
-            kwarg1="b",
-            kwarg2="c",
-        )
-        == "Mocked"
+            Klass1().some_method(
+                "a",
+                1,
+                kwarg1="b",
+                kwarg2="c",
+            )
+            == "Mocked"
     )
     assert (
-        Klass1().some_method(
-            "not mocked param",
-            1,
-            kwarg1="b",
-            kwarg2="c",
-        )
-        == "Not mocked"
+            Klass1().some_method(
+                "not mocked param",
+                1,
+                kwarg1="b",
+                kwarg2="c",
+            )
+            == "Not mocked"
     )
+
 
 # if you need to patch a function
 def test_patch_a_function(when):
@@ -114,10 +160,10 @@ You can also patch multiple targets (cls, method)
 See more examples at:
 [test_integration](tests/test_integration.py)
 
-
 ## Setup for local developement
 
 Requirements:
+
 1. pdm <https://pdm.fming.dev/latest/#installation>
 2. python3.8 (minimum supported by a tool)
 
@@ -126,6 +172,7 @@ pdm install
 ```
 
 To run tests and linters use:
+
 ```bash
 make test
 make lint
