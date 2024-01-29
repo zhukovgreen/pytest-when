@@ -11,6 +11,7 @@ repos:
         exclude: &default-py-exclude |
           (?x)^(
             LICENSE|
+            logo.png|
             README.md|
             Makefile|
             .bumpversion.cfg|
