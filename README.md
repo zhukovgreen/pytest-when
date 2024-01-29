@@ -1,3 +1,8 @@
+[![PyPI](https://img.shields.io/pypi/v/pytest-when.svg)](https://pypi.python.org/pypi/pytest-when)
+[![Build](https://github.com/Tinche/tightwrap/workflows/CI/badge.svg)](https://github.com/zhukovgreen/pytest-when/actions/workflows/test-lint.yml?query=workflow:%22Test+Action%22)
+[![Supported Python Versions](https://img.shields.io/python/required-version-toml?tomlFilePath=https://raw.githubusercontent.com/zhukovgreen/pytest-when/main/pyproject.toml)](https://raw.githubusercontent.com/zhukovgreen/pytest-when/main/pyproject.toml)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
 # pytest-when
 
 Plugin provides a `when` fixture, which enables the following way of mocking
