@@ -5,8 +5,7 @@ import pytest
 from pytest_when.when import Markers, create_call_key
 
 
-def foo(a_arg, b_arg, *, c_kw, d_kw):
-    ...
+def foo(a_arg, b_arg, *, c_kw, d_kw): ...
 
 
 def test_should_build_a_key_from_non_empty_call():
@@ -57,8 +56,7 @@ def test_result_should_be_hashable():
 
 def test_should_work_for_class_methods_as_well():
     class Some:
-        def call(self, a_arg, b_arg, *, c_kw, d_kw):
-            ...
+        def call(self, a_arg, b_arg, *, c_kw, d_kw): ...
 
     actual = create_call_key(
         inspect.signature(Some.call),
@@ -113,8 +111,7 @@ def test_should_properly_work_with_default_values_in_the_signature():
         *,
         c_kw="c_kw default",
         d_kw="d_kw default",
-    ):
-        ...
+    ): ...
 
     actual = create_call_key(
         inspect.signature(call_with_defaults),
@@ -134,8 +131,7 @@ def test_should_properly_work_with_default_values_in_the_signature():
 
 
 def test_should_work_with_variadic_args_and_kwargs():
-    def foo_with_variadic_args_kwargs(*args, **kwargs) -> str:
-        ...
+    def foo_with_variadic_args_kwargs(*args, **kwargs) -> str: ...
 
     actual = create_call_key(
         inspect.signature(foo_with_variadic_args_kwargs),
@@ -162,8 +158,7 @@ def test_should_work_with_variadic_args_and_kwargs():
         *just_var_arg,
         just_b_kwarg=1,
         **kwargs,
-    ):
-        ...
+    ): ...
 
     actual = create_call_key(
         inspect.signature(foo_with_variadic_kwargs),
