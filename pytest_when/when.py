@@ -2,6 +2,7 @@ import enum
 import functools
 import inspect
 
+from collections import deque
 from collections.abc import Mapping
 from typing import (
     Any,
@@ -21,6 +22,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from pytest_mock import MockerFixture
+from pytest_mock.plugin import MockCacheItem
 from typing_extensions import ParamSpec
 
 
@@ -257,6 +259,7 @@ class When(
     parameters in a single test.
 
     You can also patch multiple targets (cls, method)
+
     """
 
     cls: _TargetClsType
@@ -280,19 +283,29 @@ class When(
         cls: _TargetClsType,
         method: str,
     ) -> "When":
-        def matched_current_obj(patch_and_function) -> bool:
-            patch, _ = patch_and_function
-            return patch.target is cls and patch.attribute == method
+        def already_mocked(mock: MockCacheItem) -> bool:
+            return mock.patch.target is cls and mock.patch.attribute == method  # type: ignore
 
-        # if current object was already patched, we have to re-patch it again
-        for mocked_obj, func in filter(
-            matched_current_obj,
-            self.mocker._patches_and_mocks,  # noqa: SLF001
-        ):
-            mocked_obj.stop()
-            self.mocker._patches_and_mocks.remove(  # noqa: SLF001
-                (mocked_obj, func)
-            )
+        def stop_patching(mock: MockCacheItem) -> MockCacheItem:
+            mock.patch.stop()  # type: ignore
+            return mock
+
+        def remove_mock_item_from_cache(mock: MockCacheItem) -> None:
+            self.mocker._mock_cache.cache.remove(mock)  # noqa: SLF001
+
+        deque(
+            map(
+                remove_mock_item_from_cache,
+                map(
+                    stop_patching,
+                    filter(
+                        already_mocked,
+                        self.mocker._mock_cache.cache,  # noqa: SLF001
+                    ),
+                ),
+            ),
+            maxlen=0,
+        )
 
         self.cls = cls
         self.method = method
@@ -362,8 +375,8 @@ def when(mocker: MockerFixture) -> When:
     >>>         kwarg2: str,
     >>>     ) -> str:
     >>>         return "Not mocked"
-
-
+    >>>
+    >>>
     >>> def test_should_properly_patch_calls(when):
     >>>     when(Klass1, "some_method").called_with(
     >>>         "a",
@@ -371,7 +384,7 @@ def when(mocker: MockerFixture) -> When:
     >>>         kwarg1="b",
     >>>         kwarg2=Markers.any,
     >>>     ).then_return("Mocked")
-
+    >>>
     >>>     assert (
     >>>         Klass1().some_method(
     >>>             "a",
@@ -381,6 +394,7 @@ def when(mocker: MockerFixture) -> When:
     >>>         )
     >>>         == "Mocked"
     >>>     )
+    >>>
     >>>     assert (
     >>>         Klass1().some_method(
     >>>             "not mocked param",
@@ -398,5 +412,6 @@ def when(mocker: MockerFixture) -> When:
     parameters in a single test.
 
     You can also patch multiple targets (cls, method)
+
     """
     return When(mocker)

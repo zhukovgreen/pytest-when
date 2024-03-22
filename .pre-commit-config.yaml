@@ -7,7 +7,7 @@ repos:
       - id: ruff
         name: ruff
         language: system
-        entry: ruff
+        entry: ruff check
         exclude: &default-py-exclude |
           (?x)^(
             LICENSE|
