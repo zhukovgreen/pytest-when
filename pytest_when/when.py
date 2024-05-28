@@ -3,20 +3,8 @@ import functools
 import inspect
 
 from collections import deque
-from collections.abc import Mapping
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Hashable,
-    List,
-    Protocol,
-    Set,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from collections.abc import Callable, Hashable, Mapping
+from typing import Any, Generic, Protocol, TypeVar
 from unittest.mock import MagicMock
 
 import pytest
@@ -33,13 +21,13 @@ class HasNameDunder(Protocol):
 _TargetClsType = TypeVar("_TargetClsType", bound=HasNameDunder)
 _TargetMethodParams = ParamSpec("_TargetMethodParams")
 _TargetMethodReturn = TypeVar("_TargetMethodReturn")
-_TargetMethodKey = Tuple[str, str]
+_TargetMethodKey = tuple[str, str]
 
-_TargetMethodArgs = Tuple[Any, ...]
-_TargetMethodKwargs = Dict[str, Any]
+_TargetMethodArgs = tuple[Any, ...]
+_TargetMethodKwargs = dict[str, Any]
 
-_CallKeyParamDef = Tuple[str, Any]
-_CallKey = Tuple[_CallKeyParamDef, ...]
+_CallKeyParamDef = tuple[str, Any]
+_CallKey = tuple[_CallKeyParamDef, ...]
 
 
 class Markers(enum.Enum):
@@ -52,8 +40,8 @@ class Markers(enum.Enum):
 
 
 def make_container_hashable(
-    container: Tuple[Tuple[str, Any], ...]
-) -> Tuple[Tuple[str, Any], ...]:
+    container: tuple[tuple[str, Any], ...]
+) -> tuple[tuple[str, Any], ...]:
     """Make call signature hashable recursively."""
     return tuple((arg, make_hashable(value)) for arg, value in container)
 
@@ -65,13 +53,13 @@ def make_hashable(val) -> Hashable:
 
 
 @make_hashable.register
-def _(val: Mapping) -> Tuple[Tuple[str, Any], ...]:
+def _(val: Mapping) -> tuple[tuple[str, Any], ...]:
     return tuple((k, make_hashable(v)) for k, v in val.items())
 
 
 @make_hashable.register(list)
 @make_hashable.register(set)
-def _(val: Union[List[Any], Set[Any]]) -> Tuple[Any, ...]:
+def _(val: list[Any] | set[Any]) -> tuple[Any, ...]:
     return tuple(map(make_hashable, val))
 
 
@@ -95,7 +83,7 @@ def create_call_key(
 
 def get_mocked_call_result(
     original_callable_sig: inspect.Signature,
-    mocked_calls: Dict[
+    mocked_calls: dict[
         _CallKey,
         _TargetMethodReturn,
     ],
@@ -120,7 +108,7 @@ def get_mocked_call_result(
             return all(
                 params_are_compatible(_mocked_call, _call)
                 for _mocked_call, _call in zip(
-                    param_in_mocked_calls[1], param_in_call[1]
+                    param_in_mocked_calls[1], param_in_call[1], strict=False
                 )
             )
         assert param_in_mocked_calls[0] == param_in_call[0]
@@ -132,7 +120,9 @@ def get_mocked_call_result(
     def call_matched_call_key(mocked_call_key: _CallKey) -> bool:
         return all(
             params_are_compatible(param_1, param_2)
-            for param_1, param_2 in zip(mocked_call_key, call_key)
+            for param_1, param_2 in zip(
+                mocked_call_key, call_key, strict=False
+            )
         )
 
     for call in filter(call_matched_call_key, mocked_calls):
@@ -142,7 +132,7 @@ def get_mocked_call_result(
 
 def side_effect_factory(
     origin_callable: Callable[_TargetMethodParams, _TargetMethodReturn],
-    mocked_calls: Dict[_CallKey, _TargetMethodReturn],
+    mocked_calls: dict[_CallKey, _TargetMethodReturn],
 ) -> Callable[_TargetMethodParams, _TargetMethodReturn]:
     def side_effect(
         *args: _TargetMethodParams.args,
@@ -168,9 +158,9 @@ class MockedCalls(
         _TargetMethodReturn,
     ]
 ):
-    mocked_calls_registry: Dict[
+    mocked_calls_registry: dict[
         _TargetMethodKey,
-        Dict[_CallKey, _TargetMethodReturn],
+        dict[_CallKey, _TargetMethodReturn],
     ] = {}  # noqa: RUF012
 
     def __init__(self, mocker: MockerFixture) -> None:

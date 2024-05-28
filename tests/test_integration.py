@@ -1,6 +1,3 @@
-from unittest.mock import Mock
-
-from pytest_when.when import When
 from tests.resources import example_module
 
 
