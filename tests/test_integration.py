@@ -1,3 +1,6 @@
+from unittest.mock import Mock
+
+from pytest_when.when import When
 from tests.resources import example_module
 
 
@@ -309,4 +312,24 @@ def test_should_work_with_foo_without_args(when):
         .then_return("Mocked")
     )
     assert example_module.some_foo_without_args() == "Mocked"
+    patched_foo.assert_called()
+
+
+def test_should_work_with_star_kwargs(when, mocker):
+    class _:  # noqa: N801
+        @staticmethod
+        def foo(a, **kwargs):  # noqa: ARG004
+            return "Not mocked"
+
+    patched_foo = (
+        when(_, "foo")
+        .called_with(
+            1,
+            kwarg_a=when.markers.any,
+            kwarg_b="bbb",
+        )
+        .then_return("Mocked")
+    )
+    assert _.foo(1, kwarg_a="aaa", kwarg_b="bbb") == "Mocked"
+    assert _.foo(2, kwarg_a="aaa", kwarg_b="bbb") == "Not mocked"
     patched_foo.assert_called()
