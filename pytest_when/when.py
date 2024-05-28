@@ -112,6 +112,17 @@ def get_mocked_call_result(
         param_in_mocked_calls: _CallKeyParamDef,
         param_in_call: _CallKeyParamDef,
     ) -> bool:
+        # sanitize ("kwargs", ((..., ...))) calls. This call
+        #   structure comes when parameter is missed in the func signature,
+        #   but can be specified due to **kwargs. Then we need to check
+        #   each ... pair separately
+        if param_in_call[0] == "kwargs":
+            return all(
+                params_are_compatible(_mocked_call, _call)
+                for _mocked_call, _call in zip(
+                    param_in_mocked_calls[1], param_in_call[1]
+                )
+            )
         assert param_in_mocked_calls[0] == param_in_call[0]
         return (
             param_in_mocked_calls[1] is Markers.any
