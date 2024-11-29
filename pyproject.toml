@@ -169,6 +169,7 @@ dependencies = [
     "pytest>=7.3.1",
     "pytest-mock>=3.14.0",
     "typing-extensions>=4.5.0",
+    "friendly-sequences>=1.10",
 ]
 requires-python = ">=3.10"
 readme = "README.md"

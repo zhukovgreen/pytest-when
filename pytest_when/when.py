@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from friendly_sequences import Seq
 from pytest_mock import MockerFixture
 from pytest_mock.plugin import MockCacheItem
 from typing_extensions import ParamSpec
@@ -26,8 +27,8 @@ _TargetMethodKey = tuple[str, str]
 _TargetMethodArgs = tuple[Any, ...]
 _TargetMethodKwargs = dict[str, Any]
 
-_CallKeyParamDef = tuple[str, Any]
-_CallKey = tuple[_CallKeyParamDef, ...]
+_CallKeyParamDef = dict[str, Any]
+_CallKey = tuple[tuple[str, Any], ...]
 
 
 class Markers(enum.Enum):
@@ -81,6 +82,12 @@ def create_call_key(
     return make_container_hashable(tuple(call.arguments.items()))
 
 
+def handle_variadic_args_kwargs(key: tuple[str, Any]) -> tuple[str, Any]:
+    if key[0] == "kwargs":
+        return key[1]
+    return (key,)  # type: ignore
+
+
 def get_mocked_call_result(
     original_callable_sig: inspect.Signature,
     mocked_calls: dict[
@@ -97,32 +104,45 @@ def get_mocked_call_result(
     )
 
     def params_are_compatible(
-        param_in_mocked_calls: _CallKeyParamDef,
+        param_in_mocked_call: _CallKeyParamDef,
         param_in_call: _CallKeyParamDef,
     ) -> bool:
-        # sanitize ("kwargs", ((..., ...))) calls. This call
-        #   structure comes when parameter is missed in the func signature,
-        #   but can be specified due to **kwargs. Then we need to check
-        #   each ... pair separately
-        if param_in_call[0] == "kwargs":
-            return all(
-                params_are_compatible(_mocked_call, _call)
-                for _mocked_call, _call in zip(
-                    param_in_mocked_calls[1], param_in_call[1], strict=False
+        def values_matching(v1, v2) -> bool:
+            if isinstance(v1, tuple):
+                return Seq(v1).zip(v2).starmap(values_matching).all()
+            if v1 is Markers.any:
+                return True
+            return v1 == v2
+
+        return (
+            Seq(param_in_call)
+            .map(
+                lambda key: values_matching(
+                    param_in_call[key],
+                    param_in_mocked_call[key],
                 )
             )
-        assert param_in_mocked_calls[0] == param_in_call[0]
-        return (
-            param_in_mocked_calls[1] is Markers.any
-            or param_in_mocked_calls[1] == param_in_call[1]
+            .all()
         )
 
     def call_matched_call_key(mocked_call_key: _CallKey) -> bool:
-        return all(
-            params_are_compatible(param_1, param_2)
-            for param_1, param_2 in zip(
-                mocked_call_key, call_key, strict=False
-            )
+        return params_are_compatible(
+            (
+                Seq(
+                    call_key,
+                )
+                .map(handle_variadic_args_kwargs)
+                .flatten()
+                .to_dict()
+            ),
+            (
+                Seq(
+                    mocked_call_key,
+                )
+                .map(handle_variadic_args_kwargs)
+                .flatten()
+                .to_dict()
+            ),
         )
 
     for call in filter(call_matched_call_key, mocked_calls):
@@ -360,7 +380,7 @@ class When(
         )
 
 
-@pytest.fixture()
+@pytest.fixture
 def when(mocker: MockerFixture) -> When:
     """Patching utility focused on readability.
 

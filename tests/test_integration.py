@@ -271,6 +271,7 @@ def test_should_work_with_default_params_in_functions(when):
             "a",
             1,
             kwarg1="b",
+            kwarg2="some default string",
         )
         == "Mocked"
     )
@@ -300,6 +301,20 @@ def test_should_work_with_variadic_args_kwargs(when):
         == "Not mocked"
     )
     patched_foo.assert_called()
+    patched_foo = (
+        when(example_module, "some_foo_with_variadic_args_kwargs")
+        .called_with(2, 3, 4, a=1)
+        .then_return("Mocked1")
+    )
+    assert (
+        example_module.some_foo_with_variadic_args_kwargs(2, 3, 4, a=1)
+        == "Mocked1"
+    )
+
+    assert (
+        example_module.some_foo_with_variadic_args_kwargs(3, 2, 4, a=1)
+        == "Not mocked"
+    )
 
 
 def test_should_work_with_foo_without_args(when):
@@ -327,6 +342,7 @@ def test_should_work_with_star_kwargs(when, mocker):
         )
         .then_return("Mocked")
     )
+    assert _.foo(1, kwarg_b="bbb", kwarg_a="aaa") == "Mocked"
     assert _.foo(1, kwarg_a="aaa", kwarg_b="bbb") == "Mocked"
     assert _.foo(2, kwarg_a="aaa", kwarg_b="bbb") == "Not mocked"
     patched_foo.assert_called()
