@@ -37,11 +37,11 @@ class Markers(enum.Enum):
     Markers.any - means the argument could be anything
     """
 
-    any: str = "any"
+    any = "any"
 
 
 def make_container_hashable(
-    container: tuple[tuple[str, Any], ...]
+    container: tuple[tuple[str, Any], ...],
 ) -> tuple[tuple[str, Any], ...]:
     """Make call signature hashable recursively."""
     return tuple((arg, make_hashable(value)) for arg, value in container)
