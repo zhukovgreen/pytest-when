@@ -346,3 +346,67 @@ def test_should_work_with_star_kwargs(when, mocker):
     assert _.foo(1, kwarg_a="aaa", kwarg_b="bbb") == "Mocked"
     assert _.foo(2, kwarg_a="aaa", kwarg_b="bbb") == "Not mocked"
     patched_foo.assert_called()
+
+
+# Use a simple object to store call state for test assertions
+
+from typing import Any
+
+class CallState:
+    def __init__(self):
+        self.called: bool = False
+        self.last_args: tuple[Any, ...] = ()
+        self.last_kwargs: dict[str, Any] = {}
+
+call_state = CallState()
+
+def call_tracker(*args, **kwargs):
+    call_state.called = True
+    call_state.last_args = args
+    call_state.last_kwargs = kwargs
+    return "called!"
+
+
+def test_then_call_invokes_callback(when):
+    from pytest_when.when import MockedCalls
+    MockedCalls.__dict__["mocked_calls_registry"].clear()
+    call_state.called = False
+    when(Klass1, "some_method").called_with(
+        "a",
+        1,
+        kwarg1="b",
+        kwarg2="c",
+    ).then_call(call_tracker)
+
+    result = Klass1().some_method("a", 1, kwarg1="b", kwarg2="c")
+    assert result == "called!"
+    assert call_state.called is True
+    # Check type and values, not instance equality
+    assert isinstance(call_state.last_args[0], Klass1)
+    assert call_state.last_args[1:] == ("a", 1)
+    assert call_state.last_kwargs == {"kwarg1": "b", "kwarg2": "c"}
+
+
+def test_then_call_with_different_args(when):
+    from pytest_when.when import MockedCalls
+    MockedCalls.__dict__["mocked_calls_registry"].clear()
+    call_state.called = False
+    when(Klass1, "some_method").called_with(
+        "x",
+        2,
+        kwarg1="y",
+        kwarg2="z",
+    ).then_call(call_tracker)
+
+    # Should not call tracker for unmatched args
+    result = Klass1().some_method("not matched", 2, kwarg1="y", kwarg2="z")
+    assert result == "Not mocked"
+    assert call_state.called is False
+
+    # Should call tracker for matched args
+    result = Klass1().some_method("x", 2, kwarg1="y", kwarg2="z")
+    assert result == "called!"
+    assert call_state.called is True
+    assert isinstance(call_state.last_args[0], Klass1)
+    assert call_state.last_args[1:] == ("x", 2)
+    assert call_state.last_kwargs == {"kwarg1": "y", "kwarg2": "z"}

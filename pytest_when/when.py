@@ -146,7 +146,8 @@ def get_mocked_call_result(
         )
 
     for call in filter(call_matched_call_key, mocked_calls):
-        return mocked_calls[call]
+        value = mocked_calls[call]
+        return value(*args, **kwargs) if callable(value) else value
     raise KeyError(f"Call {call_key} is not in mocked_calls {mocked_calls}")
 
 
@@ -229,59 +230,72 @@ class When(
         _TargetMethodReturn,
     ]
 ):
-    """Patching utility focused on readability.
+
+    """
+    Patching utility focused on readability.
 
     Example:
 
-    >>> class Klass1:
-    >>>     def some_method(
-    >>>         self,
-    >>>         arg1: str,
-    >>>         arg2: int,
-    >>>         *,
-    >>>         kwarg1: str,
-    >>>         kwarg2: str,
-    >>>     ) -> str:
-    >>>         return "Not mocked"
+        class Klass1:
+            def some_method(
+                self,
+                arg1: str,
+                arg2: int,
+                *,
+                kwarg1: str,
+                kwarg2: str,
+            ) -> str:
+                return "Not mocked"
 
+        def test_should_properly_patch_calls(when):
+            p = when(Klass1, "some_method").called_with(
+                "a",
+                when.Markers.any,
+                kwarg1="b",
+                kwarg2=Markers.any,
+            ).then_return("Mocked")
 
-    >>> def test_should_properly_patch_calls(when):
-    >>>     p = when(Klass1, "some_method").called_with(
-    >>>         "a",
-    >>>         when.Markers.any,
-    >>>         kwarg1="b",
-    >>>         kwarg2=Markers.any,
-    >>>     ).then_return("Mocked")
-    >>>
-    >>>     assert (
-    >>>         Klass1().some_method(
-    >>>             "a",
-    >>>             1,
-    >>>             kwarg1="b",
-    >>>             kwarg2="c",
-    >>>         )
-    >>>         == "Mocked"
-    >>>     )
-    >>>     assert (
-    >>>         Klass1().some_method(
-    >>>             "not mocked param",
-    >>>             1,
-    >>>             kwarg1="b",
-    >>>             kwarg2="c",
-    >>>         )
-    >>>         == "Not mocked"
-    >>>     )
-    >>>     p.assert_called()
+            assert (
+                Klass1().some_method(
+                    "a",
+                    1,
+                    kwarg1="b",
+                    kwarg2="c",
+                )
+                == "Mocked"
+            )
+            assert (
+                Klass1().some_method(
+                    "not mocked param",
+                    1,
+                    kwarg1="b",
+                    kwarg2="c",
+                )
+                == "Not mocked"
+            )
+            p.assert_called()
 
-    It is possible to use 'when' with class methods and standalone functions
-    (in this case cls parameter will become the python module).
+        It is possible to use 'when' with class methods and standalone functions
+        (in this case cls parameter will become the python module).
 
-    You can patch multiple times the same object with different "called_with"
-    parameters in a single test.
-
-    You can also patch multiple targets (cls, method)
-
+        You can patch multiple times the same object with different "called_with"
+        parameters in a single test.
+        You can also patch multiple targets (cls, method)
     """
+
+    def then_call(self, func: Callable[..., Any]) -> MagicMock:
+        """Call the provided function with the arguments specified in called_with when the mock is triggered."""
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return self.mocked_calls.add_call(
+            self.cls,
+            self.method,
+            self.args,
+            self.kwargs,
+            wrapper,
+        )
+
 
     cls: _TargetClsType
     method: str
