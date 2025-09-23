@@ -29,6 +29,10 @@ argument, the attribute will be mocked,
     when(some_object, "attribute")
     .called_with(1, 2, when.markers.any)
     .then_return("attribute mocked")
+    # or
+    # .then_call(some_callable)
+    # or
+    # .then_raise(SomeException())
 )
 ```
 
