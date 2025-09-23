@@ -1,3 +1,7 @@
+import re
+
+import pytest
+
 from tests.resources import example_module
 
 
@@ -345,4 +349,25 @@ def test_should_work_with_star_kwargs(when, mocker):
     assert _.foo(1, kwarg_b="bbb", kwarg_a="aaa") == "Mocked"
     assert _.foo(1, kwarg_a="aaa", kwarg_b="bbb") == "Mocked"
     assert _.foo(2, kwarg_a="aaa", kwarg_b="bbb") == "Not mocked"
+    patched_foo.assert_called()
+
+
+def test_then_call_should_work(when):
+    patched_foo = (
+        when(example_module, "some_foo_without_args")
+        .called_with()
+        .then_call(lambda: "Mocked")
+    )
+    assert example_module.some_foo_without_args() == "Mocked"
+    patched_foo.assert_called()
+
+
+def test_then_raise_should_work(when):
+    patched_foo = (
+        when(example_module, "some_foo_without_args")
+        .called_with()
+        .then_raise(ValueError("Error msg"))
+    )
+    with pytest.raises(ValueError, match=re.compile("Error msg")):
+        example_module.some_foo_without_args()
     patched_foo.assert_called()

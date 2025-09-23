@@ -93,11 +93,11 @@ def get_mocked_call_result(
     original_callable_sig: inspect.Signature,
     mocked_calls: dict[
         _CallKey,
-        _TargetMethodReturn,
+        Callable[[], _TargetMethodReturn],
     ],
     *args: _TargetMethodArgs,
     **kwargs: _TargetMethodKwargs,
-) -> _TargetMethodReturn:
+) -> _TargetMethodReturn:  # type: ignore
     call_key = create_call_key(
         original_callable_sig,
         *args,
@@ -147,13 +147,14 @@ def get_mocked_call_result(
         )
 
     for call in filter(call_matched_call_key, mocked_calls):
-        return mocked_calls[call]
+        # unwrapping the result of the lazy value
+        return mocked_calls[call]()
     raise KeyError(f"Call {call_key} is not in mocked_calls {mocked_calls}")
 
 
 def side_effect_factory(
     origin_callable: Callable[_TargetMethodParams, _TargetMethodReturn],
-    mocked_calls: dict[_CallKey, _TargetMethodReturn],
+    mocked_calls: dict[_CallKey, Callable[[], _TargetMethodReturn]],
 ) -> Callable[_TargetMethodParams, _TargetMethodReturn]:
     def side_effect(
         *args: _TargetMethodParams.args,
@@ -181,7 +182,7 @@ class MockedCalls(
 ):
     mocked_calls_registry: dict[
         _TargetMethodKey,
-        dict[_CallKey, _TargetMethodReturn],
+        dict[_CallKey, Callable[[], _TargetMethodReturn]],
     ] = {}  # noqa: RUF012
 
     def __init__(self, mocker: MockerFixture) -> None:
@@ -193,7 +194,7 @@ class MockedCalls(
         method: str,
         args: _TargetMethodArgs,
         kwargs: _TargetMethodKwargs,
-        should_return: _TargetMethodReturn,
+        should_call: Callable[[], _TargetMethodReturn],
     ) -> MagicMock:
         self.mocked_calls_registry.setdefault(
             (cls.__name__, method),
@@ -205,7 +206,7 @@ class MockedCalls(
                 *args,
                 **kwargs,
             )
-        ] = should_return
+        ] = should_call
 
         return self.mocker.patch.object(
             cls,
@@ -366,13 +367,39 @@ class When(
 
     def then_return(self, value: _TargetMethodReturn) -> MagicMock:
         """Return value in case the called_with specification will match the call."""
+        return self.then_call(lambda: value)
+
+    def then_call(
+        self, callable_: Callable[[], _TargetMethodReturn]
+    ) -> MagicMock:
+        """Call the callable_ in case the called_with specification will match the call.
+
+        Callable shouldn't contain any args.
+        In case the callable needs args, kwargs - use functools.partial
+        to convert the callable into arg-less one, i.e.
+
+        Example:
+        >>> (
+        >>>    when(example_module, "some_foo")
+        >>>    .called_with()
+        >>>    .then_call(functools.partial(foo_patched, *foo_args, **foo_kwargs)
+        >>> )
+        """
         return self.mocked_calls.add_call(
             self.cls,
             self.method,
             self.args,
             self.kwargs,
-            value,
+            callable_,
         )
+
+    def then_raise(self, exc: BaseException) -> MagicMock:
+        """Raise exc in case the called_with specification will match the call."""
+
+        def _raise_exc(exc: BaseException) -> _TargetMethodReturn:
+            raise exc
+
+        return self.then_call(lambda: _raise_exc(exc))
 
 
 @pytest.fixture
