@@ -1,8 +1,9 @@
+# ruff: noqa: SLF001
+
 import enum
 import functools
 import inspect
 
-from collections import deque
 from collections.abc import Callable, Hashable, Mapping
 from typing import Any, Generic, Protocol, TypeVar
 from unittest.mock import MagicMock
@@ -312,20 +313,14 @@ class When(
             return mock
 
         def remove_mock_item_from_cache(mock: MockCacheItem) -> None:
-            self.mocker._mock_cache.cache.remove(mock)  # noqa: SLF001
+            self.mocker._mock_cache.cache.remove(mock)
 
-        deque(
-            map(
-                remove_mock_item_from_cache,
-                map(
-                    stop_patching,
-                    filter(
-                        already_mocked,
-                        self.mocker._mock_cache.cache,  # noqa: SLF001
-                    ),
-                ),
-            ),
-            maxlen=0,
+        (
+            Seq[MockCacheItem](self.mocker._mock_cache.cache)
+            .filter(already_mocked)
+            .map(stop_patching)
+            .map(remove_mock_item_from_cache)
+            .exhaust()
         )
 
         self.cls = cls
