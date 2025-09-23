@@ -1,35 +1,53 @@
 # ruff: noqa: SLF001
 
+from __future__ import annotations
+
 import enum
 import functools
 import inspect
 
 from collections.abc import Callable, Hashable, Mapping
-from typing import Any, Generic, Protocol, TypeVar
-from unittest.mock import MagicMock
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    NewType,
+    Protocol,
+    TypeAlias,
+    TypeVar,
+)
 
 import pytest
 
 from friendly_sequences import Seq
-from pytest_mock import MockerFixture
 from pytest_mock.plugin import MockCacheItem
 from typing_extensions import ParamSpec
+
+
+if TYPE_CHECKING:
+    from unittest.mock import MagicMock
+
+    from pytest_mock import MockerFixture
 
 
 class HasNameDunder(Protocol):
     __name__: str
 
 
-_TargetClsType = TypeVar("_TargetClsType", bound=HasNameDunder)
-_TargetMethodParams = ParamSpec("_TargetMethodParams")
+_TargetCls = TypeVar("_TargetCls", bound=HasNameDunder)
 _TargetMethodReturn = TypeVar("_TargetMethodReturn")
-_TargetMethodKey = tuple[str, str]
+
+_TargetClsName = NewType("_TargetClsName", str)
+_TargetMethodName = NewType("_TargetMethodName", str)
+_TargetMethodParams = ParamSpec("_TargetMethodParams")
+_TargetClsMethodKey = tuple[_TargetClsName, _TargetMethodName]
 
 _TargetMethodArgs = tuple[Any, ...]
 _TargetMethodKwargs = dict[str, Any]
 
 _CallKeyParamDef = dict[str, Any]
 _CallKey = tuple[tuple[str, Any], ...]
+_CallLazyValue: TypeAlias = Callable[[], _TargetMethodReturn]
 
 
 class Markers(enum.Enum):
@@ -93,7 +111,7 @@ def get_mocked_call_result(
     original_callable_sig: inspect.Signature,
     mocked_calls: dict[
         _CallKey,
-        Callable[[], _TargetMethodReturn],
+        _CallLazyValue,
     ],
     *args: _TargetMethodArgs,
     **kwargs: _TargetMethodKwargs,
@@ -154,7 +172,7 @@ def get_mocked_call_result(
 
 def side_effect_factory(
     origin_callable: Callable[_TargetMethodParams, _TargetMethodReturn],
-    mocked_calls: dict[_CallKey, Callable[[], _TargetMethodReturn]],
+    mocked_calls: dict[_CallKey, _CallLazyValue],
 ) -> Callable[_TargetMethodParams, _TargetMethodReturn]:
     def side_effect(
         *args: _TargetMethodParams.args,
@@ -175,14 +193,14 @@ def side_effect_factory(
 
 class MockedCalls(
     Generic[
-        _TargetClsType,
+        _TargetCls,
         _TargetMethodParams,
         _TargetMethodReturn,
     ]
 ):
     mocked_calls_registry: dict[
-        _TargetMethodKey,
-        dict[_CallKey, Callable[[], _TargetMethodReturn]],
+        _TargetClsMethodKey,
+        dict[_CallKey, _CallLazyValue],
     ] = {}  # noqa: RUF012
 
     def __init__(self, mocker: MockerFixture) -> None:
@@ -190,17 +208,17 @@ class MockedCalls(
 
     def add_call(
         self,
-        cls: _TargetClsType,
-        method: str,
+        cls: _TargetCls,
+        method: _TargetMethodName,
         args: _TargetMethodArgs,
         kwargs: _TargetMethodKwargs,
-        should_call: Callable[[], _TargetMethodReturn],
+        should_call: _CallLazyValue,
     ) -> MagicMock:
         self.mocked_calls_registry.setdefault(
-            (cls.__name__, method),
+            (_TargetClsName(cls.__name__), method),
             {},
         )
-        self.mocked_calls_registry[(cls.__name__, method)][
+        self.mocked_calls_registry[(_TargetClsName(cls.__name__), method)][
             create_call_key(
                 inspect.signature(getattr(cls, method)),
                 *args,
@@ -218,7 +236,7 @@ class MockedCalls(
             side_effect=side_effect_factory(
                 origin_callable=getattr(cls, method),
                 mocked_calls=self.mocked_calls_registry[
-                    (cls.__name__, method)
+                    (_TargetClsName(cls.__name__), method)
                 ],
             ),
         )
@@ -226,7 +244,7 @@ class MockedCalls(
 
 class When(
     Generic[
-        _TargetClsType,
+        _TargetCls,
         _TargetMethodParams,
         _TargetMethodReturn,
     ]
@@ -281,12 +299,15 @@ class When(
     You can patch multiple times the same object with different "called_with"
     parameters in a single test.
 
-    You can also patch multiple targets (cls, method)
+    You can also patch multiple targets (cls, method).
+
+    Instead of ".then_return", there are ".then_call" and  ".then_raise"
+    methods are avaialble
 
     """
 
-    cls: _TargetClsType
-    method: str
+    cls: _TargetCls
+    method: _TargetMethodName
 
     args: _TargetMethodArgs
     kwargs: _TargetMethodKwargs
@@ -296,16 +317,16 @@ class When(
     def __init__(self, mocker: MockerFixture):
         self.mocker = mocker
         self.mocked_calls = MockedCalls[
-            _TargetClsType,
+            _TargetCls,
             _TargetMethodParams,
             _TargetMethodReturn,
         ](self.mocker)
 
     def __call__(
         self,
-        cls: _TargetClsType,
-        method: str,
-    ) -> "When":
+        cls: _TargetCls,
+        method: _TargetMethodName,
+    ) -> When:
         def already_mocked(mock: MockCacheItem) -> bool:
             return mock.patch.target is cls and mock.patch.attribute == method  # type: ignore
 
@@ -332,7 +353,7 @@ class When(
         self,
         *args,
         **kwargs,
-    ) -> "When":
+    ) -> When:
         """Specify args and kwargs for which mock should be activated.
 
         Example:
@@ -369,9 +390,7 @@ class When(
         """Return value in case the called_with specification will match the call."""
         return self.then_call(lambda: value)
 
-    def then_call(
-        self, callable_: Callable[[], _TargetMethodReturn]
-    ) -> MagicMock:
+    def then_call(self, callable_: _CallLazyValue) -> MagicMock:
         """Call the callable_ in case the called_with specification will match the call.
 
         Callable shouldn't contain any args.
@@ -384,6 +403,7 @@ class When(
         >>>    .called_with()
         >>>    .then_call(functools.partial(foo_patched, *foo_args, **foo_kwargs)
         >>> )
+
         """
         return self.mocked_calls.add_call(
             self.cls,
