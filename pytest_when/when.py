@@ -7,47 +7,33 @@ import functools
 import inspect
 
 from collections.abc import Callable, Hashable, Mapping
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generic,
-    NewType,
-    Protocol,
-    TypeAlias,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Any, Generic
 
 import pytest
 
 from friendly_sequences import Seq
 from pytest_mock.plugin import MockCacheItem
-from typing_extensions import ParamSpec
+
+from pytest_when.constant import (
+    _CallKey,
+    _CallKeyParamDef,
+    _CallLazyValue,
+    _TargetCls,
+    _TargetClsMethodKey,
+    _TargetClsName,
+    _TargetMethodArgs,
+    _TargetMethodKwargs,
+    _TargetMethodName,
+    _TargetMethodParams,
+    _TargetMethodReturn,
+)
+from pytest_when.interface import ThenResponse, WhenInitial, WhenResponse
 
 
 if TYPE_CHECKING:
     from unittest.mock import MagicMock
 
     from pytest_mock import MockerFixture
-
-
-class HasNameDunder(Protocol):
-    __name__: str
-
-
-_TargetCls = TypeVar("_TargetCls", bound=HasNameDunder)
-_TargetMethodReturn = TypeVar("_TargetMethodReturn")
-
-_TargetClsName = NewType("_TargetClsName", str)
-_TargetMethodName = NewType("_TargetMethodName", str)
-_TargetMethodParams = ParamSpec("_TargetMethodParams")
-_TargetClsMethodKey = tuple[_TargetClsName, _TargetMethodName]
-
-_TargetMethodArgs = tuple[Any, ...]
-_TargetMethodKwargs = dict[str, Any]
-
-_CallKeyParamDef = dict[str, Any]
-_CallKey = tuple[tuple[str, Any], ...]
-_CallLazyValue: TypeAlias = Callable[[], _TargetMethodReturn]
 
 
 class Markers(enum.Enum):
@@ -243,11 +229,14 @@ class MockedCalls(
 
 
 class When(
+    WhenInitial[_TargetCls],
+    WhenResponse,
+    ThenResponse[_TargetMethodReturn],
     Generic[
         _TargetCls,
         _TargetMethodParams,
         _TargetMethodReturn,
-    ]
+    ],
 ):
     """Patching utility focused on readability.
 
@@ -326,7 +315,7 @@ class When(
         self,
         cls: _TargetCls,
         method: _TargetMethodName,
-    ) -> When:
+    ) -> WhenResponse:
         def already_mocked(mock: MockCacheItem) -> bool:
             return mock.patch.target is cls and mock.patch.attribute == method  # type: ignore
 
@@ -353,7 +342,7 @@ class When(
         self,
         *args,
         **kwargs,
-    ) -> When:
+    ) -> ThenResponse[_TargetMethodReturn]:
         """Specify args and kwargs for which mock should be activated.
 
         Example:
@@ -423,7 +412,7 @@ class When(
 
 
 @pytest.fixture
-def when(mocker: MockerFixture) -> When:
+def when(mocker: MockerFixture) -> WhenInitial:
     """Patching utility focused on readability.
 
     Example:

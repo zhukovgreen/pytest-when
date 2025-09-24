@@ -68,6 +68,7 @@ source = [
     "./pytest_when"
 ]
 omit = [
+    "pytest_when/interface.py"
 ]
 
 [tool.coverage.paths]
